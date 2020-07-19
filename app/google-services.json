@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "361832108296",
+    "firebase_url": "https://trashcan-map.firebaseio.com",
+    "project_id": "trashcan-map",
+    "storage_bucket": "trashcan-map.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:361832108296:android:d22fe91d894a2d4ffa9cbd",
+        "android_client_info": {
+          "package_name": "com.trashcanlocaion.toyou"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "361832108296-kbaqbvj4gm27mafef4na8mclbld9hohg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.trashcanlocaion.toyou",
+            "certificate_hash": "f97cc8c63c5e48b1418352f0527695befbd43762"
+          }
+        },
+        {
+          "client_id": "361832108296-89380ei4grult1u574jt0onik4tb512i.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0xWN_15QOZE_uewkWGk07T7x-Tc_DOR0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "361832108296-89380ei4grult1u574jt0onik4tb512i.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,13 +1,18 @@
 package com.trashcanlocaion.toyou;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.PersistableBundle;
-import android.support.annotation.NonNull;
-import android.support.v4.app.FragmentManager;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.GeoPoint;
 import com.naver.maps.geometry.LatLng;
 import com.naver.maps.map.LocationTrackingMode;
 import com.naver.maps.map.MapFragment;
@@ -20,9 +25,21 @@ import com.naver.maps.map.overlay.Overlay;
 import com.naver.maps.map.overlay.OverlayImage;
 import com.naver.maps.map.util.FusedLocationSource;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentManager;
 
 public class MainActivity extends AppCompatActivity
         implements OnMapReadyCallback {
+
+    static String TAG = "MainActivity";
+
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1000;
     private FusedLocationSource mLocationSource;
 
@@ -30,6 +47,12 @@ public class MainActivity extends AppCompatActivity
     private UiSettings uiSettings;
     private LocationOverlay mLocationOverlay;
 
+    private List<Location> locationList;
+    private List<Marker> markers;
+
+    private FirebaseFirestore db;
+
+    Handler handler = new Handler(Looper.getMainLooper());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +68,64 @@ public class MainActivity extends AppCompatActivity
         mapFragment.getMapAsync(this);
 
         mLocationSource = new FusedLocationSource(this, LOCATION_PERMISSION_REQUEST_CODE);
+        db = FirebaseFirestore.getInstance();
+
+        locationList = new ArrayList<>();
+        markers = new ArrayList<>();
+
+        DocumentReference docRef = db.collection("location").document("seoul");
+        docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@androidx.annotation.NonNull Task<DocumentSnapshot> task) {
+                if (task.isSuccessful()) {
+                    DocumentSnapshot document = task.getResult();
+                    Map<String, Object> locationMap = (HashMap<String, Object>)document.getData();
+                    Iterator<Map.Entry<String, Object>> entries = locationMap.entrySet().iterator();
+                    Log.d(TAG, "Document Snapshot data : "+document.getData());
+
+                    while(entries.hasNext()) {
+                        Map.Entry<String, Object> entry = entries.next();
+                        String locationName = entry.getKey();
+                        GeoPoint geoPoint = (GeoPoint) entry.getValue();
+                        locationList.add(new Location(geoPoint.getLatitude(), geoPoint.getLongitude(), locationName));
+                    }
+                } else {
+                    Log.d(TAG, "get failed with", task.getException());
+                }
+
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        for(int i=0; i<locationList.size(); ++i) {
+                            Marker marker = new Marker();
+                            marker.setIcon(OverlayImage.fromResource(R.mipmap.market_trashcan));
+                            double latitude = locationList.get(i).getLatitude();
+                            double longitude = locationList.get(i).getLongitude();
+                            marker.setPosition(new LatLng(latitude, longitude));
+                            marker.setOnClickListener(new Overlay.OnClickListener() {
+                                @Override
+                                public boolean onClick(@NonNull Overlay overlay) {
+                                    Toast.makeText(MainActivity.this, "마커 클릭", Toast.LENGTH_SHORT).show();
+                                    // 이벤트 소비, OnMapClick 이벤트는 발생하지 않음
+                                    return true;
+                                }
+                            });
+                            markers.add(marker);
+                        }
+
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                for(Marker marker : markers) {
+                                    marker.setMap(mNaverMap);
+                                    Log.d("execute", "marker");
+                                }
+                            }
+                        });
+                    }
+                }).start();
+            }
+        });
     }
 
     @Override
@@ -67,28 +148,13 @@ public class MainActivity extends AppCompatActivity
         uiSettings = naverMap.getUiSettings();
         mLocationOverlay = mNaverMap.getLocationOverlay();
 
-        Marker marker = new Marker();
-        marker.setIcon(OverlayImage.fromResource(R.mipmap.market_trashcan));
-        marker.setPosition(new LatLng(37.481286, 126.951503));
-        marker.setMap(mNaverMap);
-        marker.setOnClickListener(new Overlay.OnClickListener() {
-            @Override
-            public boolean onClick(@NonNull Overlay overlay) {
-                Toast.makeText(MainActivity.this, "마커 1 클릭", Toast.LENGTH_SHORT).show();
-                // 이벤트 소비, OnMapClick 이벤트는 발생하지 않음
-                return true;
-            }
-        });
-
         mNaverMap.setLocationSource(mLocationSource);
         mNaverMap.setLocationTrackingMode(LocationTrackingMode.Follow);
 
         uiSettings.setLocationButtonEnabled(true);
         uiSettings.setCompassEnabled(true);
-
         mLocationOverlay.setVisible(true);
     }
-
 
     @Override
     protected void onStart() {
