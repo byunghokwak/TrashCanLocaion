@@ -7,6 +7,13 @@ import android.os.PersistableBundle;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdSize;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.initialization.InitializationStatus;
+import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
+import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.DocumentReference;
@@ -35,9 +42,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentManager;
 
-public class MainActivity extends AppCompatActivity
-        implements OnMapReadyCallback {
-
+public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
     static String TAG = "MainActivity";
 
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1000;
@@ -52,7 +57,9 @@ public class MainActivity extends AppCompatActivity
 
     private FirebaseFirestore db;
 
-    Handler handler = new Handler(Looper.getMainLooper());
+    private Handler handler;
+
+    private AdView adView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,6 +79,12 @@ public class MainActivity extends AppCompatActivity
 
         locationList = new ArrayList<>();
         markers = new ArrayList<>();
+
+        handler = new Handler(Looper.getMainLooper());
+
+        adView = new AdView(this);
+        adView.setAdSize(AdSize.BANNER);
+        adView.setAdUnitId("ca-app-pub-3940256099942544/6300978111");
 
         DocumentReference docRef = db.collection("location").document("seoul");
         docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
@@ -102,6 +115,8 @@ public class MainActivity extends AppCompatActivity
                             double latitude = locationList.get(i).getLatitude();
                             double longitude = locationList.get(i).getLongitude();
                             marker.setPosition(new LatLng(latitude, longitude));
+                            marker.setWidth(Marker.SIZE_AUTO);
+                            marker.setHeight(Marker.SIZE_AUTO);
                             marker.setOnClickListener(new Overlay.OnClickListener() {
                                 @Override
                                 public boolean onClick(@NonNull Overlay overlay) {
@@ -126,6 +141,16 @@ public class MainActivity extends AppCompatActivity
                 }).start();
             }
         });
+
+        MobileAds.initialize(this, new OnInitializationCompleteListener() {
+            @Override
+            public void onInitializationComplete(InitializationStatus initializationStatus) {
+            }
+        });
+
+        adView = findViewById(R.id.adView);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        adView.loadAd(adRequest);
     }
 
     @Override

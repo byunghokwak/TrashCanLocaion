@@ -17,13 +17,20 @@
         <meta-data
             android:name="com.naver.maps.map.CLIENT_ID"
             android:value="qyaiuu5rkw" />
-
-        <activity android:name=".MainActivity">
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-6539126210899032~7301018409"
+            />
+        <activity android:name=".Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity android:name=".MainActivity"/>
+
+
     </application>
 
 </manifest>
