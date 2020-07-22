@@ -8,7 +8,7 @@ import android.os.Handler;
 import androidx.annotation.Nullable;
 
 public class Splash extends Activity {
-    private final int SPLASH_DISPLAY_TIME = 1000;
+    private final int SPLASH_DISPLAY_TIME = 500;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
