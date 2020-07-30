@@ -1,5 +1,7 @@
 package com.trashcanlocaion.toyou;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -7,6 +9,9 @@ import android.os.PersistableBundle;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.annotation.GlideModule;
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdSize;
 import com.google.android.gms.ads.AdView;
@@ -20,6 +25,9 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.GeoPoint;
+import com.google.firebase.storage.FileDownloadTask;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 import com.naver.maps.geometry.LatLng;
 import com.naver.maps.map.LocationTrackingMode;
 import com.naver.maps.map.MapFragment;
@@ -32,6 +40,7 @@ import com.naver.maps.map.overlay.Overlay;
 import com.naver.maps.map.overlay.OverlayImage;
 import com.naver.maps.map.util.FusedLocationSource;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -41,12 +50,16 @@ import java.util.Map;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentManager;
+import io.grpc.Context;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
     static String TAG = "MainActivity";
+    static String filePath = "gs://trashcan-map.appspot.com";
 
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1000;
     private FusedLocationSource mLocationSource;
+    static FirebaseStorage mFirestorage;
+    static StorageReference storageReference;
 
     private NaverMap mNaverMap;
     private UiSettings uiSettings;
@@ -120,8 +133,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             marker.setOnClickListener(new Overlay.OnClickListener() {
                                 @Override
                                 public boolean onClick(@NonNull Overlay overlay) {
-                                    Toast.makeText(MainActivity.this, "마커 클릭", Toast.LENGTH_SHORT).show();
+//                                    Toast.makeText(MainActivity.this, "마커 클릭", Toast.LENGTH_SHORT).show();
                                     // 이벤트 소비, OnMapClick 이벤트는 발생하지 않음
+                                    Intent intent = new Intent(getApplicationContext(), LoadViewActivity.class);
+                                    startActivityForResult(intent, 100);
                                     return true;
                                 }
                             });
@@ -151,6 +166,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         adView = findViewById(R.id.adView);
         AdRequest adRequest = new AdRequest.Builder().build();
         adView.loadAd(adRequest);
+
+        mFirestorage = FirebaseStorage.getInstance(filePath);
+        storageReference = mFirestorage.getReference();
+//        StorageReference imageRef = storageReference.child("seoul/gwanak-gu/4번출구.png");
+
     }
 
     @Override
