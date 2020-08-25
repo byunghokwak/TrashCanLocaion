@@ -34,6 +34,7 @@ import com.naver.maps.map.overlay.OverlayImage;
 import com.naver.maps.map.util.FusedLocationSource;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -50,6 +51,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1000;
     private FusedLocationSource mLocationSource;
     static FirebaseStorage mFirestorage;
+    static DocumentReference docRef;
     static StorageReference storageReference;
 
     private NaverMap mNaverMap;
@@ -87,8 +89,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         adView = new AdView(this);
         adView.setAdSize(AdSize.BANNER);
         adView.setAdUnitId("ca-app-pub-3940256099942544/6300978111");
+//        DocumentReference docRef = db.collection("location").document("seoul");
+        docRef = db.collection("location").document("korea").collection("seoul").document("gangnam-gu");
 
-        DocumentReference docRef = db.collection("location").document("seoul");
+        // 로컬 DB 업로드 (필요시에만 활성화하고 평소에는 안 씀)
+//        uploadLocationInforamtion();
+
         docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
             public void onComplete(@androidx.annotation.NonNull Task<DocumentSnapshot> task) {
@@ -100,9 +106,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                     while(entries.hasNext()) {
                         Map.Entry<String, Object> entry = entries.next();
-                        String locationName = entry.getKey();
-                        GeoPoint geoPoint = (GeoPoint) entry.getValue();
-                        locationList.add(new Location(geoPoint.getLatitude(), geoPoint.getLongitude(), locationName));
+                        String locationIdx_Name = entry.getKey();
+
+                        // 11+주소이름 = +로 split
+                        String locationName = locationIdx_Name.split("\\+")[1];
+
+                        ArrayList<String> dataArr = (ArrayList)entry.getValue();
+                        String geoInfo[] = dataArr.get(Common.CloudFirestore.GEOMETRY).split(", ");
+                        String locationDatails = dataArr.get(Common.CloudFirestore.LOCATION_DETAILS);
+                        locationList.add(new Location(Double.parseDouble(geoInfo[0]), Double.parseDouble(geoInfo[1]), locationName, locationDatails));
                     }
                 } else {
                     Log.d(TAG, "get failed with", task.getException());
@@ -116,6 +128,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             marker.setIcon(OverlayImage.fromResource(R.mipmap.market_trashcan));
                             double latitude = locationList.get(i).getLatitude();
                             double longitude = locationList.get(i).getLongitude();
+                            String locationDetails = locationList.get(i).getLocationDetails();
+                            String locationName = locationList.get(i).getLocationName();
+
                             marker.setPosition(new LatLng(latitude, longitude));
                             marker.setWidth(Marker.SIZE_AUTO);
                             marker.setHeight(Marker.SIZE_AUTO);
@@ -125,6 +140,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 //                                    Toast.makeText(MainActivity.this, "마커 클릭", Toast.LENGTH_SHORT).show();
                                     // 이벤트 소비, OnMapClick 이벤트는 발생하지 않음
                                     Intent intent = new Intent(getApplicationContext(), LoadViewActivity.class);
+                                    intent.putExtra("locationName", locationName);
+                                    intent.putExtra("locationDetails", locationDetails);
                                     startActivityForResult(intent, 100);
                                     return true;
                                 }
@@ -219,5 +236,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     protected void onDestroy() {
         super.onDestroy();
+    }
+
+    public void uploadLocationInforamtion() {
+        GeoUploadModule geoUploadModule = new GeoUploadModule(getResources(), docRef);
+        geoUploadModule.start();
     }
 }
