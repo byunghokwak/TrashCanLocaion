@@ -7,14 +7,17 @@ import android.os.Looper;
 import android.os.PersistableBundle;
 import android.util.Log;
 
+import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdSize;
 import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.InterstitialAd;
 import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.initialization.InitializationStatus;
 import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.FirebaseApp;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -64,6 +67,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private FirebaseFirestore db;
     private Handler handler;
     private AdView adView;
+    private InterstitialAd mInterstitialAd;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,8 +92,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         adView = new AdView(this);
         adView.setAdSize(AdSize.BANNER);
-        adView.setAdUnitId("ca-app-pub-3940256099942544/6300978111");
-//        DocumentReference docRef = db.collection("location").document("seoul");
+        adView.setAdUnitId(getString(R.string.banner_ad_unit_id_for_test));
+
+        // 전면광고 - 테스트 안 됨
+//        MobileAds.initialize(this, "ca-app-pub-6539126210899032~7301018409");
+//        mInterstitialAd = new InterstitialAd(this);
+//        mInterstitialAd.setAdUnitId(getString(R.string.front_ad_unit_id_for_test));
+//        mInterstitialAd.loadAd(new AdRequest.Builder().build());
+//        if (mInterstitialAd.isLoaded()) {
+//            mInterstitialAd.show();
+//        }
+
         docRef = db.collection("location").document("korea").collection("seoul").document("gangnam-gu");
 
         // 로컬 DB 업로드 (필요시에만 활성화하고 평소에는 안 씀)
@@ -175,8 +188,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         mFirestorage = FirebaseStorage.getInstance(filePath);
         storageReference = mFirestorage.getReference();
-//        StorageReference imageRef = storageReference.child("seoul/gwanak-gu/4번출구.png");
-
     }
 
     @Override

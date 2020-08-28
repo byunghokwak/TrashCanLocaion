@@ -7,37 +7,35 @@
     android:orientation="vertical">
 
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="2">
+        android:layout_width="fill_parent"
+        android:layout_height="200dp">
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
-            <ImageView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:scaleType="centerCrop"
-                android:id="@+id/loadView">
-            </ImageView>
-            <ImageView
-                android:layout_width="35dp"
-                android:layout_height="35dp"
-                android:layout_margin="10dp"
-                android:src="@drawable/ic_back_arrow_white">
-            </ImageView>
+            android:layout_height="200dp">
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:adjustViewBounds="true"
+            android:scaleType="center"
+            android:id="@+id/loadView">
+        </ImageView>
+        <ImageView
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="10dp"
+            android:src="@drawable/ic_back_arrow_white">
+        </ImageView>
         </FrameLayout>
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="0.15"
+        android:layout_height="10dp"
         android:background="@color/browser_actions_bg_grey"/>
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="0.5"
+        android:layout_height="50dp"
         android:orientation="horizontal"
         android:paddingLeft="20dp"
         android:paddingRight="20dp">
@@ -63,16 +61,13 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="0.15"
+        android:layout_height="10dp"
         android:background="@color/browser_actions_bg_grey"/>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="3"
         android:orientation="vertical">
-
         <TextView
             android:layout_margin="10dp"
             android:layout_width="wrap_content"
