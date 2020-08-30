@@ -62,12 +62,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private LocationOverlay mLocationOverlay;
 
     private List<Location> locationList;
+    private int locationLoopCnt;
     private List<Marker> markers;
 
     private FirebaseFirestore db;
     private Handler handler;
     private AdView adView;
     private InterstitialAd mInterstitialAd;
+
+    private String[] locaionArray;
+
+    private Map<String, String> wardMap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,6 +99,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         adView.setAdSize(AdSize.BANNER);
         adView.setAdUnitId(getString(R.string.banner_ad_unit_id_for_test));
 
+        initWardMap();
         // 전면광고 - 테스트 안 됨
 //        MobileAds.initialize(this, "ca-app-pub-6539126210899032~7301018409");
 //        mInterstitialAd = new InterstitialAd(this);
@@ -102,79 +108,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 //        if (mInterstitialAd.isLoaded()) {
 //            mInterstitialAd.show();
 //        }
-
-        docRef = db.collection("location").document("korea").collection("seoul").document("gangnam-gu");
+        locaionArray = getResources().getStringArray(R.array.location);
 
         // 로컬 DB 업로드 (필요시에만 활성화하고 평소에는 안 씀)
-//        uploadLocationInforamtion();
+        uploadLocationInforamtion(Common.Ward.GANGNAM_GU, Common.CSVFileName.GANGNAM_GU);
 
-        docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-            @Override
-            public void onComplete(@androidx.annotation.NonNull Task<DocumentSnapshot> task) {
-                if (task.isSuccessful()) {
-                    DocumentSnapshot document = task.getResult();
-                    Map<String, Object> locationMap = (HashMap<String, Object>)document.getData();
-                    Iterator<Map.Entry<String, Object>> entries = locationMap.entrySet().iterator();
-                    Log.d(TAG, "Document Snapshot data : "+document.getData());
-
-                    while(entries.hasNext()) {
-                        Map.Entry<String, Object> entry = entries.next();
-                        String locationIdx_Name = entry.getKey();
-
-                        // 11+주소이름 = +로 split
-                        String locationName = locationIdx_Name.split("\\+")[1];
-
-                        ArrayList<String> dataArr = (ArrayList)entry.getValue();
-                        String geoInfo[] = dataArr.get(Common.CloudFirestore.GEOMETRY).split(", ");
-                        String locationDatails = dataArr.get(Common.CloudFirestore.LOCATION_DETAILS);
-                        locationList.add(new Location(Double.parseDouble(geoInfo[0]), Double.parseDouble(geoInfo[1]), locationName, locationDatails));
-                    }
-                } else {
-                    Log.d(TAG, "get failed with", task.getException());
-                }
-
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        for(int i=0; i<locationList.size(); ++i) {
-                            Marker marker = new Marker();
-                            marker.setIcon(OverlayImage.fromResource(R.mipmap.market_trashcan));
-                            double latitude = locationList.get(i).getLatitude();
-                            double longitude = locationList.get(i).getLongitude();
-                            String locationDetails = locationList.get(i).getLocationDetails();
-                            String locationName = locationList.get(i).getLocationName();
-
-                            marker.setPosition(new LatLng(latitude, longitude));
-                            marker.setWidth(Marker.SIZE_AUTO);
-                            marker.setHeight(Marker.SIZE_AUTO);
-                            marker.setOnClickListener(new Overlay.OnClickListener() {
-                                @Override
-                                public boolean onClick(@NonNull Overlay overlay) {
-//                                    Toast.makeText(MainActivity.this, "마커 클릭", Toast.LENGTH_SHORT).show();
-                                    // 이벤트 소비, OnMapClick 이벤트는 발생하지 않음
-                                    Intent intent = new Intent(getApplicationContext(), LoadViewActivity.class);
-                                    intent.putExtra("locationName", locationName);
-                                    intent.putExtra("locationDetails", locationDetails);
-                                    startActivityForResult(intent, 100);
-                                    return true;
-                                }
-                            });
-                            markers.add(marker);
-                        }
-
-                        handler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                for(Marker marker : markers) {
-                                    marker.setMap(mNaverMap);
-                                    Log.d("execute", "marker");
-                                }
-                            }
-                        });
-                    }
-                }).start();
-            }
-        });
+        // 파이어베이스로부터 location 정보 (지명정보, geo)를 loading하여 Marker 등록
+        loadLocaionInfoFromFirebase();
 
         MobileAds.initialize(this, new OnInitializationCompleteListener() {
             @Override
@@ -249,8 +189,102 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onDestroy();
     }
 
-    public void uploadLocationInforamtion() {
-        GeoUploadModule geoUploadModule = new GeoUploadModule(getResources(), docRef);
+    public void uploadLocationInforamtion(String document, int csvFileName) {
+        docRef = db.collection("location").document("korea").collection("seoul").document(document);
+        GeoUploadModule geoUploadModule = new GeoUploadModule(getResources(), docRef, csvFileName);
         geoUploadModule.start();
+    }
+
+    public void loadLocaionInfoFromFirebase() {
+        String locationDocument;
+        locationLoopCnt = 0;
+
+        for(int i=0; i<locaionArray.length; ++i) {
+            locationDocument = locaionArray[i];
+            docRef = db.collection("location").document("korea").collection("seoul").document(locationDocument);
+            docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                @Override
+                public void onComplete(@androidx.annotation.NonNull Task<DocumentSnapshot> task) {
+                    if (task.isSuccessful()) {
+                        DocumentSnapshot document = task.getResult();
+                        Map<String, Object> locationMap = (HashMap<String, Object>) document.getData();
+                        Iterator<Map.Entry<String, Object>> entries = locationMap.entrySet().iterator();
+                        Log.d(TAG, "Document Snapshot data : " + document.getData());
+
+                        while (entries.hasNext()) {
+                            Map.Entry<String, Object> entry = entries.next();
+                            String locationIdx_Name = entry.getKey();
+
+                            // 11+주소이름 = +로 split
+                            String locationName = locationIdx_Name.split("\\+")[1];
+
+                            ArrayList<String> dataArr = (ArrayList) entry.getValue();
+                            String geoInfo[] = dataArr.get(Common.CloudFirestore.GEOMETRY).split(", ");
+                            String locationDatails = dataArr.get(Common.CloudFirestore.LOCATION_DETAILS);
+                            String ward = dataArr.get(Common.CloudFirestore.WARD);
+                            locationList.add(new Location(Double.parseDouble(geoInfo[0]), Double.parseDouble(geoInfo[1]), locationName, locationDatails, ward));
+                        }
+                        locationLoopCnt++;
+                        if (locationLoopCnt == locaionArray.length) {
+                            loadMakersToMap();
+                        }
+                    } else {
+                        Log.d(TAG, "get failed with", task.getException());
+                    }
+                }
+            });
+        }
+    }
+
+    public void loadMakersToMap() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                for (int i = 0; i < locationList.size(); ++i) {
+                    Marker marker = new Marker();
+                    marker.setIcon(OverlayImage.fromResource(R.mipmap.market_trashcan));
+                    double latitude = locationList.get(i).getLatitude();
+                    double longitude = locationList.get(i).getLongitude();
+                    String locationDetails = locationList.get(i).getLocationDetails();
+                    String locationName = locationList.get(i).getLocationName();
+                    String ward = locationList.get(i).getWard();
+
+                    marker.setPosition(new LatLng(latitude, longitude));
+                    marker.setWidth(Marker.SIZE_AUTO);
+                    marker.setHeight(Marker.SIZE_AUTO);
+                    marker.setOnClickListener(new Overlay.OnClickListener() {
+                        @Override
+                        public boolean onClick(@NonNull Overlay overlay) {
+                            // Toast.makeText(MainActivity.this, "마커 클릭", Toast.LENGTH_SHORT).show();
+                            // 이벤트 소비, OnMapClick 이벤트는 발생하지 않음
+                            Intent intent = new Intent(getApplicationContext(), LoadViewActivity.class);
+                            intent.putExtra("locationName", locationName);
+                            intent.putExtra("locationDetails", locationDetails);
+                            String wardKor = wardMap.get(ward);
+                            intent.putExtra("ward", wardKor);
+                            startActivityForResult(intent, 100);
+                            return true;
+                        }
+                    });
+                    markers.add(marker);
+                }
+
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        for (Marker marker : markers) {
+                            marker.setMap(mNaverMap);
+                            Log.d("execute", "marker");
+                        }
+                    }
+                });
+            }
+        }).start();
+    }
+
+    public void initWardMap() {
+        wardMap = new HashMap<>();
+        wardMap.put("강남구", Common.Ward.GANGNAM_GU);
+        wardMap.put("관악구", Common.Ward.GWANAK_GU);
     }
 }

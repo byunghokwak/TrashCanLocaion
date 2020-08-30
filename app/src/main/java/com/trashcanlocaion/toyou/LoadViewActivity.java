@@ -12,10 +12,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentActivity;
 
 public class LoadViewActivity extends AppCompatActivity {
-    private String imageStoragePath = "korea/seoul/gangnamgu/";
+    private String imageStoragePath = "korea/seoul/";
     private Intent intent;
     private String locationName;
     private String locationDetails;
+    private String ward;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,6 +30,9 @@ public class LoadViewActivity extends AppCompatActivity {
 
         locationName = intent.getExtras().getString("locationName");
         locationDetails = intent.getExtras().getString("locationDetails");
+        ward = intent.getExtras().getString("ward");
+        imageStoragePath += (ward+"/");
+
 
         String imgFullPath = imageStoragePath + locationName +".png";
         StorageReference imageRef = MainActivity.storageReference.child(imgFullPath);
