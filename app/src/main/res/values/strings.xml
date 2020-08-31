@@ -9,5 +9,6 @@
     <string-array name="location">
         <item>gangnamgu</item>
         <item>gwanakgu</item>
+        <item>seochogu</item>
     </string-array>
 </resources>

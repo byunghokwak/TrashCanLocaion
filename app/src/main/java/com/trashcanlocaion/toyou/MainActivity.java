@@ -111,7 +111,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         locaionArray = getResources().getStringArray(R.array.location);
 
         // 로컬 DB 업로드 (필요시에만 활성화하고 평소에는 안 씀)
-        uploadLocationInforamtion(Common.Ward.GANGNAM_GU, Common.CSVFileName.GANGNAM_GU);
+//        uploadLocationInforamtion(Common.Ward.SEOCHO_GU, Common.CSVFileName.SEOCHO_GU);
 
         // 파이어베이스로부터 location 정보 (지명정보, geo)를 loading하여 Marker 등록
         loadLocaionInfoFromFirebase();
@@ -286,5 +286,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         wardMap = new HashMap<>();
         wardMap.put("강남구", Common.Ward.GANGNAM_GU);
         wardMap.put("관악구", Common.Ward.GWANAK_GU);
+        wardMap.put("서초구", Common.Ward.SEOCHO_GU);
     }
 }

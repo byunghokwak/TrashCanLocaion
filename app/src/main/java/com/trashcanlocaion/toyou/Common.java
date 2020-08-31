@@ -1,6 +1,5 @@
 package com.trashcanlocaion.toyou;
-
-public class Common {
+class Common {
     class CloudFirestore {
         public static final int LOCATION_SET = 0;
         public static final int LOCATION_DETAILS = 1;
@@ -11,10 +10,12 @@ public class Common {
     class CSVFileName {
         public static final int GANGNAM_GU = R.raw.gangnamgu;
         public static final int GWANAK_GU = R.raw.gwanakgu;
+        public static final int SEOCHO_GU = R.raw.seochogu;
     }
 
     class Ward {
         public static final String GANGNAM_GU = "gangnamgu";
         public static final String GWANAK_GU = "gwanakgu";
+        public static final String SEOCHO_GU = "seochogu";
     }
 }
