@@ -1,11 +1,13 @@
 package com.trashcanlocaion.toyou;
 
 import android.content.Intent;
+import android.graphics.PointF;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.PersistableBundle;
 import android.util.Log;
+import android.view.View;
 
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
@@ -30,6 +32,7 @@ import com.naver.maps.map.MapFragment;
 import com.naver.maps.map.NaverMap;
 import com.naver.maps.map.OnMapReadyCallback;
 import com.naver.maps.map.UiSettings;
+import com.naver.maps.map.overlay.InfoWindow;
 import com.naver.maps.map.overlay.LocationOverlay;
 import com.naver.maps.map.overlay.Marker;
 import com.naver.maps.map.overlay.Overlay;
@@ -63,7 +66,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private List<Location> locationList;
     private int locationLoopCnt;
+    private Map<Marker, Integer> markersMap;
     private List<Marker> markers;
+    private InfoWindow infoWindow;
 
     private FirebaseFirestore db;
     private Handler handler;
@@ -90,44 +95,23 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mLocationSource = new FusedLocationSource(this, LOCATION_PERMISSION_REQUEST_CODE);
         db = FirebaseFirestore.getInstance();
 
-        locationList = new ArrayList<>();
-        markers = new ArrayList<>();
-
-        handler = new Handler(Looper.getMainLooper());
-
-        adView = new AdView(this);
-        adView.setAdSize(AdSize.BANNER);
-        adView.setAdUnitId(getString(R.string.banner_ad_unit_id_for_test));
-
-        initWardMap();
-        // 전면광고 - 테스트 안 됨
-//        MobileAds.initialize(this, "ca-app-pub-6539126210899032~7301018409");
-//        mInterstitialAd = new InterstitialAd(this);
-//        mInterstitialAd.setAdUnitId(getString(R.string.front_ad_unit_id_for_test));
-//        mInterstitialAd.loadAd(new AdRequest.Builder().build());
-//        if (mInterstitialAd.isLoaded()) {
-//            mInterstitialAd.show();
-//        }
-        locaionArray = getResources().getStringArray(R.array.location);
-
-        // 로컬 DB 업로드 (필요시에만 활성화하고 평소에는 안 씀)
-//        uploadLocationInforamtion(Common.Ward.SEOCHO_GU, Common.CSVFileName.SEOCHO_GU);
-
-        // 파이어베이스로부터 location 정보 (지명정보, geo)를 loading하여 Marker 등록
-        loadLocaionInfoFromFirebase();
-
-        MobileAds.initialize(this, new OnInitializationCompleteListener() {
-            @Override
-            public void onInitializationComplete(InitializationStatus initializationStatus) {
-            }
-        });
-
-        adView = findViewById(R.id.adView);
-        AdRequest adRequest = new AdRequest.Builder().build();
-        adView.loadAd(adRequest);
-
         mFirestorage = FirebaseStorage.getInstance(filePath);
         storageReference = mFirestorage.getReference();
+
+        locationList = new ArrayList<>();
+        markers = new ArrayList<>();
+        markersMap = new HashMap<>();
+
+        handler = new Handler(Looper.getMainLooper());
+        locaionArray = getResources().getStringArray(R.array.location);
+
+//        uploadLocationInforamtion(Common.Ward.SEOCHO_GU, Common.CSVFileName.SEOCHO_GU); // 로컬 DB 업로드 (필요시에만 활성화하고 평소에는 안 씀)
+
+
+        loadLocaionInfoFromFirebase(); // 파이어베이스로부터 location 정보 (지명정보, geo)를 loading하여 Marker 등록
+
+        initAds();  // 광고 모듈 초기화 launch
+        initWardMap();  // 한글 - R.raw.string에 HashMap 처리
     }
 
     @Override
@@ -143,7 +127,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
-
     @Override
     public void onMapReady(@NonNull NaverMap naverMap) {
         mNaverMap = naverMap;
@@ -153,10 +136,44 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mNaverMap.setLayerGroupEnabled(NaverMap.LAYER_GROUP_TRANSIT, true);
         mNaverMap.setLocationSource(mLocationSource);
         mNaverMap.setLocationTrackingMode(LocationTrackingMode.Follow);
+        mNaverMap.setOnMapClickListener(new NaverMap.OnMapClickListener() {
+            @Override
+            public void onMapClick(@NonNull PointF pointF, @NonNull LatLng latLng) {
+                infoWindow.close();
+            }
+        });
 
         uiSettings.setLocationButtonEnabled(true);
         uiSettings.setCompassEnabled(true);
         mLocationOverlay.setVisible(true);
+
+        infoWindow = new InfoWindow();
+        infoWindow.setAdapter(new InfoWindow.DefaultTextAdapter(getApplicationContext()) {
+            @NonNull
+            @Override
+            public CharSequence getText(@NonNull InfoWindow infoWindow) {
+                return (CharSequence)infoWindow.getMarker().getTag();
+            }
+        });
+        infoWindow.setOnClickListener(new Overlay.OnClickListener() {
+            @Override
+            public boolean onClick(@NonNull Overlay overlay) {
+                Marker nowMarker = infoWindow.getMarker();
+                nowMarker.getTag();
+                Intent intent = new Intent(getApplicationContext(), LoadViewActivity.class);
+                int marketIdx = markersMap.get(nowMarker);
+                String locationDetails = locationList.get(marketIdx).getLocationDetails();
+                String locationName = locationList.get(marketIdx).getLocationName();
+                String ward = locationList.get(marketIdx).getWard();
+
+                intent.putExtra("locationName", locationName);
+                intent.putExtra("locationDetails", locationDetails);
+                String wardKor = wardMap.get(ward);
+                intent.putExtra("ward", wardKor);
+                startActivityForResult(intent, 100);
+                return true;
+            }
+        });
     }
 
     @Override
@@ -243,6 +260,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 for (int i = 0; i < locationList.size(); ++i) {
                     Marker marker = new Marker();
                     marker.setIcon(OverlayImage.fromResource(R.mipmap.market_trashcan));
+
                     double latitude = locationList.get(i).getLatitude();
                     double longitude = locationList.get(i).getLongitude();
                     String locationDetails = locationList.get(i).getLocationDetails();
@@ -252,17 +270,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     marker.setPosition(new LatLng(latitude, longitude));
                     marker.setWidth(Marker.SIZE_AUTO);
                     marker.setHeight(Marker.SIZE_AUTO);
+
+                    marker.setTag(locationDetails);
+                    markersMap.put(marker, i);
+
                     marker.setOnClickListener(new Overlay.OnClickListener() {
                         @Override
                         public boolean onClick(@NonNull Overlay overlay) {
-                            // Toast.makeText(MainActivity.this, "마커 클릭", Toast.LENGTH_SHORT).show();
-                            // 이벤트 소비, OnMapClick 이벤트는 발생하지 않음
-                            Intent intent = new Intent(getApplicationContext(), LoadViewActivity.class);
-                            intent.putExtra("locationName", locationName);
-                            intent.putExtra("locationDetails", locationDetails);
-                            String wardKor = wardMap.get(ward);
-                            intent.putExtra("ward", wardKor);
-                            startActivityForResult(intent, 100);
+                            infoWindow.open(marker);
                             return true;
                         }
                     });
@@ -287,5 +302,30 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         wardMap.put("강남구", Common.Ward.GANGNAM_GU);
         wardMap.put("관악구", Common.Ward.GWANAK_GU);
         wardMap.put("서초구", Common.Ward.SEOCHO_GU);
+    }
+
+    public void initAds() {
+        adView = new AdView(this);
+        adView.setAdSize(AdSize.BANNER);
+        adView.setAdUnitId(getString(R.string.banner_ad_unit_id_for_test));
+
+        adView = findViewById(R.id.adView);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        adView.loadAd(adRequest);
+
+        // 전면광고 - 테스트 안 됨
+//        MobileAds.initialize(this, "ca-app-pub-6539126210899032~7301018409");
+//        mInterstitialAd = new InterstitialAd(this);
+//        mInterstitialAd.setAdUnitId(getString(R.string.front_ad_unit_id_for_test));
+//        mInterstitialAd.loadAd(new AdRequest.Builder().build());
+//        if (mInterstitialAd.isLoaded()) {
+//            mInterstitialAd.show();
+//        }
+
+//        MobileAds.initialize(this, new OnInitializationCompleteListener() {
+//            @Override
+//            public void onInitializationComplete(InitializationStatus initializationStatus) {
+//            }
+//        });
     }
 }
