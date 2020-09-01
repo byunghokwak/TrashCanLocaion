@@ -8,13 +8,18 @@ import android.os.Looper;
 import android.os.PersistableBundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
+import com.google.android.ads.nativetemplates.TemplateView;
 import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdLoader;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdSize;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.InterstitialAd;
 import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.formats.NativeAdOptions;
+import com.google.android.gms.ads.formats.UnifiedNativeAd;
 import com.google.android.gms.ads.initialization.InitializationStatus;
 import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -72,12 +77,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private FirebaseFirestore db;
     private Handler handler;
-    private AdView adView;
-    private InterstitialAd mInterstitialAd;
+    private AdView adView;  // Banner Ads
+    private InterstitialAd mInterstitialAd; // Front Ads
 
     private String[] locaionArray;
 
     private Map<String, String> wardMap;
+
+    private final long FINISH_INTERVAL_TIME = 2000;
+    private long backPressedTime = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -202,8 +210,24 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
+    protected void onDestroy() { super.onDestroy(); }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        long tempTime = System.currentTimeMillis();
+        long intervalTime = tempTime - backPressedTime;
+
+        if (0 <= intervalTime && FINISH_INTERVAL_TIME >= intervalTime) {
+            super.onBackPressed();
+        }
+        else {
+            backPressedTime = tempTime;
+            Toast.makeText(getApplicationContext(), "\"뒤로가기\" 를 한번더 누르면 종료됩니다.", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(getApplicationContext(), NativeAds.class);
+            startActivityForResult(intent, 100);
+        }
+
     }
 
     public void uploadLocationInforamtion(String document, int csvFileName) {
@@ -314,7 +338,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         adView.loadAd(adRequest);
 
         // 전면광고 - 테스트 안 됨
-//        MobileAds.initialize(this, "ca-app-pub-6539126210899032~7301018409");
+
 //        mInterstitialAd = new InterstitialAd(this);
 //        mInterstitialAd.setAdUnitId(getString(R.string.front_ad_unit_id_for_test));
 //        mInterstitialAd.loadAd(new AdRequest.Builder().build());

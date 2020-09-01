@@ -5,6 +5,8 @@
     <string name="banner_ad_unit_id_for_test">ca-app-pub-3940256099942544/6300978111</string>
     <string name="front_ad_unit_id">ca-app-pub-6539126210899032/8923290482</string>
     <string name="front_ad_unit_id_for_test">ca-app-pub-3940256099942544/1033173712</string>
+    <string name="native_ad_unit_id">ca-app-pub-6539126210899032/6844045762</string>
+    <string name="native_ad_unit_id_for_test">ca-app-pub-3940256099942544/2247696110</string>
 
     <string-array name="location">
         <item>gangnamgu</item>
