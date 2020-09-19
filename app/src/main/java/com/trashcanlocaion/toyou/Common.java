@@ -12,6 +12,7 @@ class Common {
         public static final int GWANAK_GU = R.raw.gwanakgu;
         public static final int SEOCHO_GU = R.raw.seochogu;
         public static final int JUNG_GU = R.raw.junggu;
+        public static final int MAPO_GU = R.raw.mapogu;
     }
 
     class Ward {
@@ -19,5 +20,6 @@ class Common {
         public static final String GWANAK_GU = "gwanakgu";
         public static final String SEOCHO_GU = "seochogu";
         public static final String JUNG_GU = "junggu";
+        public static final String MAPO_GU = "mapogu";
     }
 }
