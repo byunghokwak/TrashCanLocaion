@@ -13,6 +13,8 @@ class Common {
         public static final int SEOCHO_GU = R.raw.seochogu;
         public static final int JUNG_GU = R.raw.junggu;
         public static final int MAPO_GU = R.raw.mapogu;
+        public static final int JONGRO_GU = R.raw.jongrogu;
+        public static final int YONGSAN_GU = R.raw.yongsangu;
     }
 
     class Ward {
@@ -21,5 +23,7 @@ class Common {
         public static final String SEOCHO_GU = "seochogu";
         public static final String JUNG_GU = "junggu";
         public static final String MAPO_GU = "mapogu";
+        public static final String JONGRO_GU = "jongrogu";
+        public static final String YONGSAN_GU = "yongsangu";
     }
 }

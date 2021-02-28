@@ -113,7 +113,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         handler = new Handler(Looper.getMainLooper());
         locaionArray = getResources().getStringArray(R.array.location);
 
-//        uploadLocationInforamtion(Common.Ward.MAPO_GU, Common.CSVFileName.MAPO_GU); // 로컬 DB 업로드 (필요시에만 활성화하고 평소에는 안 씀)
+//        uploadLocationInforamtion(Common.Ward.YONGSAN_GU, Common.CSVFileName.YONGSAN_GU); // 로컬 DB 업로드 (필요시에만 활성화하고 평소에는 안 씀)
 
 
         loadLocaionInfoFromFirebase(); // 파이어베이스로부터 location 정보 (지명정보, geo)를 loading하여 Marker 등록
@@ -248,9 +248,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 public void onComplete(@androidx.annotation.NonNull Task<DocumentSnapshot> task) {
                     if (task.isSuccessful()) {
                         DocumentSnapshot document = task.getResult();
+                        Log.d(TAG, "Document Snapshot data : " + document.getData());
                         Map<String, Object> locationMap = (HashMap<String, Object>) document.getData();
                         Iterator<Map.Entry<String, Object>> entries = locationMap.entrySet().iterator();
-                        Log.d(TAG, "Document Snapshot data : " + document.getData());
 
                         while (entries.hasNext()) {
                             Map.Entry<String, Object> entry = entries.next();
@@ -328,6 +328,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         wardMap.put("서초구", Common.Ward.SEOCHO_GU);
         wardMap.put("중구", Common.Ward.JUNG_GU);
         wardMap.put("마포구", Common.Ward.MAPO_GU);
+        wardMap.put("종로구", Common.Ward.JONGRO_GU);
+        wardMap.put("용산구", Common.Ward.YONGSAN_GU);
     }
 
     public void initAds() {

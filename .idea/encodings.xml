@@ -3,11 +3,13 @@
   <component name="Encoding" defaultCharsetForPropertiesFiles="x-windows-949">
     <file url="file://$PROJECT_DIR$/app/src/main/res/raw/gangnamgu.csv" charset="x-windows-949" />
     <file url="file://$PROJECT_DIR$/app/src/main/res/raw/gwanakgu.csv" charset="x-windows-949" />
+    <file url="file://$PROJECT_DIR$/app/src/main/res/raw/jongrogu.csv" charset="x-windows-949" />
     <file url="file://$PROJECT_DIR$/app/src/main/res/raw/junggu.csv" charset="x-windows-949" />
     <file url="file://$PROJECT_DIR$/app/src/main/res/raw/mapogu.csv" charset="x-windows-949" />
     <file url="file://$PROJECT_DIR$/app/src/main/res/raw/seochogu.csv" charset="x-windows-949" />
     <file url="file://$PROJECT_DIR$/app/src/main/res/raw/seoul_trashcan_location_v1.csv" charset="x-windows-949" />
     <file url="file://$PROJECT_DIR$/app/src/main/res/raw/utf8.csv" charset="x-windows-949" />
+    <file url="file://$PROJECT_DIR$/app/src/main/res/raw/yongsangu.csv" charset="x-windows-949" />
     <file url="PROJECT" charset="UTF-8" />
   </component>
 </project>
